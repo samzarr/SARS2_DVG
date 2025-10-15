@@ -1,0 +1,20 @@
+# Ignore all FASTQ, FQ, SAM, BAM, and large intermediates
+*.fastq
+*.fq
+*.sam
+*.bam
+
+# Ignore all intermediate files in automation subfolders
+automation/*/*.fastq
+automation/*/*.fq
+automation/*/*.sam
+automation/*/*.bam
+automation/*/*.out
+automation/*/*.val_*
+automation/*/*.trimmed.*
+
+# Ignore log and cache folders if any
+*.log
+*.out
+*.tab
+
