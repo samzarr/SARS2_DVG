@@ -1,0 +1,58 @@
+STAR version=2.7.3a
+STAR compilation time,server,dir=Wed Feb 12 03:02:35 UTC 2025 :/opt/conda/conda-bld/star_1739329239493/work/source
+##### Command Line:
+STAR --runMode genomeGenerate --runThreadN 8 --genomeDir Genome_Dir --genomeFastaFiles NC_045512.2.fasta --genomeSAindexNbases 6
+##### Initial USER parameters from Command Line:
+###### All USER parameters from Command Line:
+runMode                       genomeGenerate     ~RE-DEFINED
+runThreadN                    8     ~RE-DEFINED
+genomeDir                     Genome_Dir     ~RE-DEFINED
+genomeFastaFiles              NC_045512.2.fasta        ~RE-DEFINED
+genomeSAindexNbases           6     ~RE-DEFINED
+##### Finished reading parameters from all sources
+
+##### Final user re-defined parameters-----------------:
+runMode                           genomeGenerate
+runThreadN                        8
+genomeDir                         Genome_Dir
+genomeFastaFiles                  NC_045512.2.fasta   
+genomeSAindexNbases               6
+
+-------------------------------
+##### Final effective command line:
+STAR   --runMode genomeGenerate   --runThreadN 8   --genomeDir Genome_Dir   --genomeFastaFiles NC_045512.2.fasta      --genomeSAindexNbases 6
+----------------------------------------
+
+Finished loading and checking parameters
+Feb 01 07:04:32 ... starting to generate Genome files
+NC_045512.2.fasta : chr # 0  "NC_045512.2" chrStart: 0
+Estimated genome size=201262144   262144   201000000
+GstrandBit=32
+Number of SA indices: 59806
+Feb 01 07:04:32 ... starting to sort Suffix Array. This may take a long time...
+Number of chunks: 8;   chunks size limit: 68344 bytes
+Feb 01 07:04:32 ... sorting Suffix Array chunks and saving them to disk...
+Writing 8408 bytes into Genome_Dir/SA_7 ; empty space on disk = 216157442277376 bytes ... done
+ done
+Writing 66856 bytes into Genome_Dir/SA_2 ; empty space on disk = 216157439131648 bytes ...Writing 66616 bytes into Genome_Dir/SA_0 ; empty space on disk = 216157439131648 bytes ...Writing 66240 bytes into Genome_Dir/SA_1 ; empty space on disk = 216157439131648 bytes ... done
+ done
+Writing 68312 bytes into Genome_Dir/SA_6 ; empty space on disk = 216157403480064 bytes ...Writing 67096 bytes into Genome_Dir/SA_4 ; empty space on disk = 216157385654272 bytes ...Writing 67096 bytes into Genome_Dir/SA_4 ; empty space on disk = 216157385654272 bytes ...es ... done
+ done
+Writing 67248 bytes into Genome_Dir/SA_5 ; empty space on disk = 216157350002688 bytes ...es ...Writin done
+g 67248 bytes into Genome_Dir/SA_5 ; empty space on disk = 216157350002688 bytes ... done
+ done
+Feb 01 07:04:32 ... loading chunks from disk, packing SA...
+Feb 01 07:04:32 ... finished generating suffix array
+Feb 01 07:04:32 ... generating Suffix Array index
+Feb 01 07:04:32 ... completed Suffix Array index
+Feb 01 07:04:32 ... writing Genome to disk ...
+Writing 262144 bytes into Genome_Dir/Genome ; empty space on disk = 216157312253952 bytes ... done
+SA size in bytes: 246703
+Feb 01 07:04:32 ... writing Suffix Array to disk ...
+Writing 246703 bytes into Genome_Dir/SA ; empty space on disk = 216157245145088 bytes ... done
+Feb 01 07:04:32 ... writing SAindex to disk
+Writing 8 bytes into Genome_Dir/SAindex ; empty space on disk = 216157181181952 bytes ... done
+Writing 56 bytes into Genome_Dir/SAindex ; empty space on disk = 216157181181952 bytes ... done
+Writing 23891 bytes into Genome_Dir/SAindex ; empty space on disk = 216157181181952 bytes ... done
+Feb 01 07:04:32 ..... finished successfully
+DONE: Genome generation, EXITING

@@ -1,0 +1,65 @@
+STAR version=2.7.10b
+STAR compilation time,server,dir= :/Users/distiller/project/STARcompile/source
+STAR git: On branch master ; commit c6f8efc2c7043ef83bf8b0d9bed36bbb6b9b1133 ; diff files: 
+##### Command Line:
+STAR --runThreadN 8 --runMode genomeGenerate --genomeDir GENOME_DIR --genomeFastaFiles ../../SARS-CoV-2_Deletion_detection_from_amplicon-seq/NC_045512.2.fasta --genomeSAindexNbases 6
+##### Initial USER parameters from Command Line:
+###### All USER parameters from Command Line:
+runThreadN                    8     ~RE-DEFINED
+runMode                       genomeGenerate        ~RE-DEFINED
+genomeDir                     GENOME_DIR     ~RE-DEFINED
+genomeFastaFiles              ../../SARS-CoV-2_Deletion_detection_from_amplicon-seq/NC_045512.2.fasta        ~RE-DEFINED
+genomeSAindexNbases           6     ~RE-DEFINED
+##### Finished reading parameters from all sources
+
+##### Final user re-defined parameters-----------------:
+runMode                           genomeGenerate   
+runThreadN                        8
+genomeDir                         GENOME_DIR
+genomeFastaFiles                  ../../SARS-CoV-2_Deletion_detection_from_amplicon-seq/NC_045512.2.fasta   
+genomeSAindexNbases               6
+
+-------------------------------
+##### Final effective command line:
+STAR   --runMode genomeGenerate      --runThreadN 8   --genomeDir GENOME_DIR   --genomeFastaFiles ../../SARS-CoV-2_Deletion_detection_from_amplicon-seq/NC_045512.2.fasta      --genomeSAindexNbases 6
+----------------------------------------
+
+Number of fastq files for each mate = 1
+ParametersSolo: --soloCellFilterType CellRanger2.2 filtering parameters:  3000 0.99 10
+Finished loading and checking parameters
+--genomeDir directory exists and will be overwritten: GENOME_DIR/
+Oct 15 11:10:58 ... starting to generate Genome files
+../../SARS-CoV-2_Deletion_detection_from_amplicon-seq/NC_045512.2.fasta : chr # 0  "NC_045512.2" chrStart: 0
+Chromosome sequence lengths: 
+NC_045512.2	29903
+Genome sequence total length = 29903
+Genome size with padding = 262144
+Estimated genome size with padding and SJs: total=genome+SJ=201262144 = 262144 + 201000000
+GstrandBit=32
+Number of SA indices: 59806
+Oct 15 11:10:58 ... starting to sort Suffix Array. This may take a long time...
+Number of chunks: 8;   chunks size limit: 68344 bytes
+Oct 15 11:10:58 ... sorting Suffix Array chunks and saving them to disk...
+Writing 8408 bytes into GENOME_DIR//SA_7 ; empty space on disk = 40792894734336 bytes ... done
+Writing 67096 bytes into GENOME_DIR//SA_4 ; empty space on disk = 40792891588608 bytes ... done
+Writing 68312 bytes into GENOME_DIR//SA_6 ; empty space on disk = 40792873762816 bytes ... done
+Writing 66856 bytes into GENOME_DIR//SA_2 ; empty space on disk = 40792855937024 bytes ... done
+Writing 66240 bytes into GENOME_DIR//SA_1 ; empty space on disk = 40792838111232 bytes ... done
+Writing 67672 bytes into GENOME_DIR//SA_3 ; empty space on disk = 40792820285440 bytes ... done
+Writing 67248 bytes into GENOME_DIR//SA_5 ; empty space on disk = 40792802459648 bytes ... done
+Writing 66616 bytes into GENOME_DIR//SA_0 ; empty space on disk = 40792784633856 bytes ... done
+Oct 15 11:10:58 ... loading chunks from disk, packing SA...
+Oct 15 11:10:58 ... finished generating suffix array
+Oct 15 11:10:58 ... generating Suffix Array index
+Oct 15 11:10:58 ... completed Suffix Array index
+Oct 15 11:10:58 ... writing Genome to disk ...
+Writing 262144 bytes into GENOME_DIR//Genome ; empty space on disk = 40792961843200 bytes ... done
+SA size in bytes: 246703
+Oct 15 11:10:58 ... writing Suffix Array to disk ...
+Writing 246703 bytes into GENOME_DIR//SA ; empty space on disk = 40792958697472 bytes ... done
+Oct 15 11:10:58 ... writing SAindex to disk
+Writing 8 bytes into GENOME_DIR//SAindex ; empty space on disk = 41193757999104 bytes ... done
+Writing 56 bytes into GENOME_DIR//SAindex ; empty space on disk = 41193759047680 bytes ... done
+Writing 23891 bytes into GENOME_DIR//SAindex ; empty space on disk = 41193759047680 bytes ... done
+Oct 15 11:10:58 ..... finished successfully
+DONE: Genome generation, EXITING

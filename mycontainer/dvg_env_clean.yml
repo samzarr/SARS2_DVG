@@ -1,0 +1,40 @@
+name: dvg_env
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+
+dependencies:
+  - python=3.10
+  - sra-tools
+  - star
+  - samtools
+  - minimap2
+  - bcftools
+  - bedtools
+  - bowtie2
+  - star
+  - fastqc
+  - trim-galore
+  - cutadapt
+  - pandas
+  - numpy
+  - scipy
+  - pip
+  - zlib
+  - bzip2
+  - xz
+  - libdeflate
+  # R support
+  - r-base=4.3
+  - r-data.table
+  - r-dplyr
+  - r-readr
+  - r-tidyr
+  - r-ggplot2
+  - r-tibble
+
+  - pip:
+      - pysam
+      - matplotlib
+      - seaborn
