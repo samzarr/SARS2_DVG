@@ -1,8 +1,7 @@
 name: dvg_env
 channels:
-  - bioconda
   - conda-forge
-  - defaults
+  - bioconda
 
 dependencies:
   - python=3.10
@@ -13,13 +12,13 @@ dependencies:
   - bcftools
   - bedtools
   - bowtie2
-  - star
   - fastqc
   - trim-galore
   - cutadapt
   - pandas
   - numpy
   - scipy
+  - pysam
   - pip
   - zlib
   - bzip2
@@ -35,6 +34,5 @@ dependencies:
   - r-tibble
 
   - pip:
-      - pysam
       - matplotlib
       - seaborn

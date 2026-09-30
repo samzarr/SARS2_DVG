@@ -6,13 +6,19 @@ library(tidyr)
 library(ggplot2)
 library(tibble)
 
+args <- commandArgs(trailingOnly = TRUE)
+
 # -----------------------------
 # STEP 1: Summarize recombination data
 # -----------------------------
-recomb_files <- list.files(pattern = "*deletion.sorted.txt")
+if (length(args) >= 1 && file.exists(args[1])) {
+  recomb_files <- args[1]
+} else {
+  recomb_files <- list.files(pattern = ".*deletion\\.sorted\\.txt$")
+}
 
 process_file <- function(file) {
-  data <- read_tsv(file)
+  data <- read_tsv(file, show_col_types = FALSE)
   
   summarized_data <- data %>%
   group_by(chrom, start, end) %>%
@@ -25,7 +31,7 @@ process_file <- function(file) {
         max_aligned_length = max(aligned_length)) %>%
   ungroup()
   
-  output_file <- sub("deletion.sorted.txt$", "count.txt", file)
+  output_file <- sub("deletion\\.sorted\\.txt$", "count.txt", file)
   write_tsv(summarized_data, file = output_file)
 }
 
@@ -34,8 +40,13 @@ lapply(recomb_files, process_file)
 # -----------------------------
 # STEP 2: Frequency calculation and filtering
 # -----------------------------
-coverage_files <- list.files(path = ".", pattern = "*out.sorted.coverage", full.names = TRUE)
-count_files <- list.files(path = ".", pattern = "*count.txt", full.names = TRUE)
+coverage_files <- list.files(path = ".", pattern = ".*out\\.sorted\\.coverage$", full.names = TRUE)
+count_files <- list.files(path = ".", pattern = ".*count\\.txt$", full.names = TRUE)
+
+if (length(args) >= 1 && !file.exists(args[1])) {
+  # If a sample name prefix was passed as an argument
+  count_files <- count_files[grepl(args[1], count_files)]
+}
 
 for (bed_file in count_files) {
   base_name <- sub("_annotated_standardizationAligned\\.count\\.txt$", "", basename(bed_file))
@@ -52,14 +63,16 @@ for (bed_file in count_files) {
   junction_depth <- sum(data$depth)
   print(paste0("The total junction depth is: ", junction_depth))
   
-  coverage <- read.table(coverage_file, sep = "", header = FALSE)
+  coverage <- read.table(coverage_file[1], sep = "", header = FALSE)
   coverage <- coverage %>% rename(Genome = V1, Position = V2, Depth = V3)
   total_depth <- sum(coverage$Depth)
   print(paste0("The total mapped depth is: ", total_depth))
   
   data_forward <- data[which(data$start < data$end), ]
-  data_forward$start_cov <- coverage[unlist(data_forward[2]), 3]
-  data_forward$end_cov <- coverage[unlist(data_forward[3] + 1), 3]
+  start_idx <- match(data_forward$start, coverage$Position)
+  end_idx <- match(data_forward$end + 1, coverage$Position)
+  data_forward$start_cov <- ifelse(is.na(start_idx), 0, coverage$Depth[start_idx])
+  data_forward$end_cov <- ifelse(is.na(end_idx), 0, coverage$Depth[end_idx])
   data_forward <- transform(data_forward, MinCov = pmin(start_cov, end_cov))
   data_forward$Frequency <- data_forward$depth / data_forward$MinCov
   data_forward$logFreq <- log10(data_forward$Frequency)

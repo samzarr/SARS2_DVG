@@ -1,61 +1,57 @@
 #!/bin/bash
-set -e
+set -eo pipefail
 
-# Base directory (inside Docker)
-ROOT_DIR="/pipeline"
+THREADS="${1:-4}"
+CLEANUP="${2:-true}"
 
-# Scripts
+# Base directory (inside Docker or local workspace)
+ROOT_DIR="${PIPELINE_ROOT:-/pipeline}"
 SCRIPTS="${ROOT_DIR}/scripts"
-
-# SARS-CoV-2 pipeline repo (renamed as resources)
 REPO="${ROOT_DIR}/resources"
-
-# Sample sheet
 TSV="${SCRIPTS}/coguk_illumina_paired_artic.tsv"
-
-# Pipeline script
 PIPELINE="${SCRIPTS}/run_pipeline.sh"
 
-# Primer versions
 PRIMER_V3="${REPO}/ARTIC_primers_v3.bed"
 PRIMER_V4="${REPO}/ARTIC_primers_v4.bed"
 PRIMER_V41="${REPO}/ARTIC_primers_v4.1.bed"
 
-# Read in TSV (skip header)
-tail -n +2 "$TSV" | while IFS=$'\t' read -r RUN_ID PRIMER_VER PROTOCOL_VER; do
-  echo "==============================="
-  echo ">>> Processing ${RUN_ID} (primer: ${PRIMER_VER})"
-  echo "==============================="
+if [ ! -f "$TSV" ]; then
+  echo "Error: TSV file not found at ${TSV}" >&2
+  exit 1
+fi
 
-  # 1. Download raw .SRA file
-  prefetch "$RUN_ID"
+# Process samples sequentially
+tail -n +2 "$TSV" | while IFS=$'\t' read -r RUN_ID PRIMER_VER PROTOCOL_VER; do
+  [ -z "$RUN_ID" ] && continue
+
+  echo "=========================================================="
+  echo ">>> Processing ${RUN_ID} (Primer: ${PRIMER_VER}, Threads: ${THREADS})"
+  echo "=========================================================="
+
+  # 1. Download raw .SRA file if not already present
+  if [ ! -d "$RUN_ID" ] || [ ! -f "${RUN_ID}/${RUN_ID}.sra" ]; then
+    prefetch "$RUN_ID"
+  fi
 
   # 2. Enter sample directory
   cd "$RUN_ID"
 
   # 3. Dynamically select primer version
   case "$PRIMER_VER" in
-    3|v3|V3)
-      PRIMER_FILE="$PRIMER_V3"
-      ;;
-    4|v4|V4)
-      PRIMER_FILE="$PRIMER_V4"
-      ;;
-    4.1|v4.1|4.1alt|v4.1alt)
-      PRIMER_FILE="$PRIMER_V41"
-      ;;
+    3|v3|V3)                 PRIMER_FILE="$PRIMER_V3" ;;
+    4|v4|V4)                 PRIMER_FILE="$PRIMER_V4" ;;
+    4.1|v4.1|4.1alt|v4.1alt) PRIMER_FILE="$PRIMER_V41" ;;
     *)
-      echo "Warning: Unknown primer version '${PRIMER_VER}' for ${RUN_ID} — skipping."
+      echo "Warning: Unknown primer version '${PRIMER_VER}' for ${RUN_ID} — skipping." >&2
       cd ..
       continue
       ;;
   esac
 
-  # 4. Call pipeline to finish all steps
-  # bash "$PIPELINE" "$PRIMER_FILE" "$REPO"
+  # 4. Call pipeline with logging
   LOG_FILE="${RUN_ID}_pipeline.log"
   echo "Logging output to ${LOG_FILE}"
-  bash "$PIPELINE" "$PRIMER_FILE" "$REPO" 2>&1 | tee "$LOG_FILE"      
+  bash "$PIPELINE" "$PRIMER_FILE" "$REPO" "$THREADS" "$CLEANUP" 2>&1 | tee "$LOG_FILE"
 
   # 5. Return to upper working directory
   cd ..

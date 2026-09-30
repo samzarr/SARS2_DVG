@@ -1,0 +1,50 @@
+# ==============================================================================
+# HTCondor Submit File: SARS-CoV-2 Deletion Detection Pipeline (Single-Sample Queue)
+# ==============================================================================
+
+# Script executed inside the container
+executable              = run_sample_condor.sh
+arguments               = $(RUN_ID) $(PRIMER_VER) $(CPUS)
+
+# ------------------------------------------------------------------------------
+# Container Configuration:
+# - Apptainer/Singularity (default at CHTC & OSG): universe = vanilla + container_image
+# - Replace <YOUR_REGISTRY_USER> with your Docker Hub / Quay / GitHub username
+# ------------------------------------------------------------------------------
+universe                = vanilla
+container_image         = docker://<YOUR_REGISTRY_USER>/sars2_dvg:latest
+
+# (Alternative) If your cluster uses HTCondor native Docker Universe:
+# universe              = docker
+# docker_image          = <YOUR_REGISTRY_USER>/sars2_dvg:latest
+
+# Logging: per-sample logs stored in logs/ directory
+log                     = logs/$(RUN_ID).log
+output                  = logs/$(RUN_ID).out
+error                   = logs/$(RUN_ID).err
+
+# File Transfer Settings:
+should_transfer_files   = YES
+when_to_transfer_output = ON_EXIT
+
+# Stage the pre-downloaded .sra file to worker node scratch
+transfer_input_files    = staged_sra/$(RUN_ID).sra
+
+# Only transfer back meaningful results and logs (intermediate raw FASTQ & SAM are cleaned)
+transfer_output_files   = filtered_$(RUN_ID)_0.01_5_20_2_34.txt, \
+                          filtered_$(RUN_ID)_annotated_standardizationAligned.deletion.sorted.txt, \
+                          filtered_$(RUN_ID)_annotated_standardizationAligned.out.sorted.bam, \
+                          filtered_$(RUN_ID)_annotated_standardizationAligned.out.sorted.coverage, \
+                          $(RUN_ID)_pipeline.log
+
+# Resource Requests per Sample:
+CPUS                    = 4
+request_cpus            = $(CPUS)
+request_memory          = 8 GB
+request_disk            = 15 GB
+
+# ------------------------------------------------------------------------------
+# Queue 1 job per sample from the TSV manifest
+# (TSV columns: RUN_ID, PRIMER_VER, PROTOCOL_VER)
+# ------------------------------------------------------------------------------
+queue RUN_ID, PRIMER_VER from coguk_illumina_paired_artic.tsv

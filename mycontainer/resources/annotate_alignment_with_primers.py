@@ -11,13 +11,17 @@ import dvg
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("primer_bed", help="BED file containing primer coordinates")
-    parser.add_argument("sam_file", help="SAM file containing alignments")
+    parser.add_argument("sam_file", help="SAM/BAM file containing alignments")
+    parser.add_argument("--sam", 
+                        dest="output_sam", 
+                        action="store_true", default=False, 
+                        help="Output SAM format instead of BAM")
     args = parser.parse_args()
 
     primers = dvg.parse_primer_bed(args.primer_bed)
   
     input_samfile = pysam.AlignmentFile(args.sam_file, "r")
-    with pysam.AlignmentFile("-", "w", template=input_samfile) as output_samfile:
+    with pysam.AlignmentFile("-", "w" if args.output_sam else "wb", template=input_samfile) as output_samfile:
         annotate_reads_with_primer_info(input_samfile, output_samfile, primers)
 
 def annotate_reads_with_primer_info(input_samfile, output_samfile, primers):
