@@ -7,10 +7,20 @@ CPUS="${3:-4}"
 REPO="${PIPELINE_REPO:-/pipeline/resources}"
 PIPELINE="${PIPELINE_SCRIPT:-/pipeline/scripts/run_pipeline.sh}"
 
+# Ensure CPUS is a valid positive integer
+if ! [[ "$CPUS" =~ ^[0-9]+$ ]]; then
+  CPUS=1
+fi
+
 if [ -z "$RUN_ID" ]; then
   echo "Error: RUN_ID argument missing." >&2
   echo "Usage: $0 <RUN_ID> <PRIMER_VERSION> [CPUS]" >&2
   exit 1
+fi
+
+# Ensure execution is in HTCondor scratch directory where files were transferred
+if [ -n "$_CONDOR_SCRATCH_DIR" ] && [ -d "$_CONDOR_SCRATCH_DIR" ]; then
+  cd "$_CONDOR_SCRATCH_DIR"
 fi
 
 echo "=========================================================="

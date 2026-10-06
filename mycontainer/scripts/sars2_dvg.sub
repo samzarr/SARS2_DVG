@@ -2,21 +2,13 @@
 # HTCondor Submit File: SARS-CoV-2 Deletion Detection Pipeline (Single-Sample Queue)
 # ==============================================================================
 
-# Script executed inside the container
+# Container Configuration (per CHTC guide: universe = container)
+universe                = container
+container_image         = docker://szarr1/sars2_dvg:v1
+
+# Script to run inside container and its arguments
 executable              = run_sample_condor.sh
 arguments               = $(RUN_ID) $(PRIMER_VER) $(CPUS)
-
-# ------------------------------------------------------------------------------
-# Container Configuration:
-# - Apptainer/Singularity (default at CHTC & OSG): universe = vanilla + container_image
-# - Replace <YOUR_REGISTRY_USER> with your Docker Hub / Quay / GitHub username
-# ------------------------------------------------------------------------------
-universe                = vanilla
-container_image         = docker://<YOUR_REGISTRY_USER>/sars2_dvg:latest
-
-# (Alternative) If your cluster uses HTCondor native Docker Universe:
-# universe              = docker
-# docker_image          = <YOUR_REGISTRY_USER>/sars2_dvg:latest
 
 # Logging: per-sample logs stored in logs/ directory
 log                     = logs/$(RUN_ID).log
@@ -38,13 +30,13 @@ transfer_output_files   = filtered_$(RUN_ID)_0.01_5_20_2_34.txt, \
                           $(RUN_ID)_pipeline.log
 
 # Resource Requests per Sample:
-CPUS                    = 4
+CPUS                    = 1
 request_cpus            = $(CPUS)
-request_memory          = 8 GB
-request_disk            = 15 GB
+request_memory          = 4GB
+request_disk            = 10GB
 
 # ------------------------------------------------------------------------------
 # Queue 1 job per sample from the TSV manifest
 # (TSV columns: RUN_ID, PRIMER_VER, PROTOCOL_VER)
 # ------------------------------------------------------------------------------
-queue RUN_ID, PRIMER_VER from coguk_illumina_paired_artic.tsv
+queue RUN_ID, PRIMER_VER, PROTOCOL_VER from coguk_illumina_paired_artic.tsv

@@ -21,8 +21,9 @@ if [ ! -f "$TSV" ]; then
 fi
 
 # Process samples sequentially
-tail -n +2 "$TSV" | while IFS=$'\t' read -r RUN_ID PRIMER_VER PROTOCOL_VER; do
+grep -v '^[[:space:]]*#' "$TSV" | while IFS=$'\t' read -r RUN_ID PRIMER_VER PROTOCOL_VER; do
   [ -z "$RUN_ID" ] && continue
+  [[ "$RUN_ID" =~ ^[rR]un_[iI]d ]] && continue
 
   echo "=========================================================="
   echo ">>> Processing ${RUN_ID} (Primer: ${PRIMER_VER}, Threads: ${THREADS})"

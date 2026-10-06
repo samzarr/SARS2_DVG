@@ -18,6 +18,11 @@ else
   CLEANUP="${5:-true}"
 fi
 
+# Ensure THREADS is a valid positive integer
+if ! [[ "$THREADS" =~ ^[0-9]+$ ]]; then
+  THREADS=1
+fi
+
 name="${SRA}"
 REF="${REPO}/NC_045512.2.fasta"
 GENOME_DIR="${REPO}/Genome_Dir"
