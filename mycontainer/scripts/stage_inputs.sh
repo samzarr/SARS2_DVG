@@ -82,19 +82,19 @@ grep -v '^[[:space:]]*#' "$TSV" | while IFS=$'\t' read -r RUN_ID PRIMER_VER PROT
   fi
 
   # Method C: Apptainer/Singularity (standard on CHTC submit nodes)
-  if [ "$DOWNLOADED" = false ] && { command -v apptainer >/dev/null 2>&1 || command -v singularity >/dev/null 2>&1; }; then
-    CONTAINER_RUNNER="apptainer"
-    command -v apptainer >/dev/null 2>&1 || CONTAINER_RUNNER="singularity"
-    CONTAINER_IMG="${CONTAINER_IMAGE:-docker://quay.io/biocontainers/sra-tools:3.1.1--h43eeafb_0}"
-    echo "    Attempting download with ${CONTAINER_RUNNER} container..."
-    if $CONTAINER_RUNNER exec "$CONTAINER_IMG" prefetch "$RUN_ID" -O "$DEST_DIR" 2>/dev/null; then
-      if [ -f "${DEST_DIR}/${RUN_ID}/${RUN_ID}.sra" ]; then
-        mv "${DEST_DIR}/${RUN_ID}/${RUN_ID}.sra" "$TARGET_SRA"
-        rmdir "${DEST_DIR}/${RUN_ID}" 2>/dev/null || true
-      fi
-      [ -s "$TARGET_SRA" ] && DOWNLOADED=true
-    fi
-  fi
+  # if [ "$DOWNLOADED" = false ] && { command -v apptainer >/dev/null 2>&1 || command -v singularity >/dev/null 2>&1; }; then
+  #   CONTAINER_RUNNER="apptainer"
+  #   command -v apptainer >/dev/null 2>&1 || CONTAINER_RUNNER="singularity"
+  #   CONTAINER_IMG="${CONTAINER_IMAGE:-docker://quay.io/biocontainers/sra-tools:3.1.1--h43eeafb_0}"
+  #   echo "    Attempting download with ${CONTAINER_RUNNER} container..."
+  #   if $CONTAINER_RUNNER exec "$CONTAINER_IMG" prefetch "$RUN_ID" -O "$DEST_DIR" 2>/dev/null; then
+  #     if [ -f "${DEST_DIR}/${RUN_ID}/${RUN_ID}.sra" ]; then
+  #       mv "${DEST_DIR}/${RUN_ID}/${RUN_ID}.sra" "$TARGET_SRA"
+  #       rmdir "${DEST_DIR}/${RUN_ID}" 2>/dev/null || true
+  #     fi
+  #     [ -s "$TARGET_SRA" ] && DOWNLOADED=true
+  #   fi
+  # fi
 
   if [ -s "$TARGET_SRA" ]; then
     echo ">>> Successfully staged ${TARGET_SRA} ($(du -h "$TARGET_SRA" | cut -f1))"
