@@ -5,7 +5,12 @@ RUN_ID="$1"
 PRIMER_VER="$2"
 CPUS="${3:-4}"
 REPO="${PIPELINE_REPO:-/pipeline/resources}"
-PIPELINE="${PIPELINE_SCRIPT:-/pipeline/scripts/run_pipeline.sh}"
+if [ -f "./run_pipeline.sh" ]; then
+  PIPELINE="./run_pipeline.sh"
+else
+  PIPELINE="${PIPELINE_SCRIPT:-/pipeline/scripts/run_pipeline.sh}"
+fi
+
 
 # Ensure CPUS is a valid positive integer
 if ! [[ "$CPUS" =~ ^[0-9]+$ ]]; then
