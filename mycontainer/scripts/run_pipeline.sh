@@ -79,6 +79,13 @@ log_step() {
   echo "=========================================================="
 }
 
+# Helper filter: drop high-volume per-read stderr prints while preserving genuine warnings and errors
+filter_verbose_stderr() {
+  sed -e '/^Shifted alignment read/d' \
+      -e '/^No closest primer found for read/d' \
+      -e '/has multiple alignments with different primer pools/d' >&2
+}
+
 echo "=========================================================="
 echo "Running DVG pipeline for ${SRA}"
 echo "Primer BED: ${PRIMER}"
@@ -88,11 +95,73 @@ echo "Initial Scratch Disk: $(du -sh . 2>/dev/null | cut -f1)"
 echo "Initial Peak RAM:     $(get_memory_peak)"
 echo "=========================================================="
 
-# 1. FASTQ extraction (if SRA archive present)
-log_step "1. FASTQ Extraction (fasterq-dump)"
-if [ -f "./${SRA}.sra" ]; then
-  echo "Extracting FASTQs from ./${SRA}.sra..."
+# 1. Input acquisition and FASTQ extraction
+log_step "1. Input Acquisition and FASTQ Extraction"
+
+# Check if FASTQs already exist
+if [ ! -s "${SRA}_1.fastq" ] || [ ! -s "${SRA}_2.fastq" ]; then
+  # If .sra archive is not already present, download it on the compute node
+  if [ ! -s "./${SRA}.sra" ]; then
+    echo "Input ./${SRA}.sra not found in scratch. Downloading ${SRA} on compute node..."
+    DOWNLOADED=false
+
+    # Method A: prefetch from SRA Toolkit (installed in container)
+    if command -v prefetch >/dev/null 2>&1; then
+      echo "  Attempting download via prefetch..."
+      if prefetch "${SRA}" -O ./ 2>/dev/null; then
+        if [ -f "./${SRA}/${SRA}.sra" ]; then
+          mv "./${SRA}/${SRA}.sra" "./${SRA}.sra"
+          rmdir "./${SRA}" 2>/dev/null || true
+        elif [ -f "./${SRA}.sra" ]; then
+          :
+        fi
+        [ -s "./${SRA}.sra" ] && DOWNLOADED=true
+      fi
+    fi
+
+    # Method B: Direct HTTPS download via curl from NCBI SRA AWS Open Data
+    if [ "$DOWNLOADED" = false ]; then
+      S3_URL="https://sra-pub-run-odp.s3.amazonaws.com/sra/${SRA}/${SRA}"
+      if command -v curl >/dev/null 2>&1; then
+        echo "  Attempting direct HTTPS download from NCBI Open Data via curl..."
+        if curl -f -L --retry 3 -sS -o "./${SRA}.sra" "$S3_URL"; then
+          [ -s "./${SRA}.sra" ] && DOWNLOADED=true
+        fi
+      fi
+    fi
+
+    # Method C: Direct HTTPS download via wget
+    if [ "$DOWNLOADED" = false ]; then
+      S3_URL="https://sra-pub-run-odp.s3.amazonaws.com/sra/${SRA}/${SRA}"
+      if command -v wget >/dev/null 2>&1; then
+        echo "  Attempting direct HTTPS download from NCBI Open Data via wget..."
+        if wget -q -O "./${SRA}.sra" "$S3_URL"; then
+          [ -s "./${SRA}.sra" ] && DOWNLOADED=true
+        fi
+      fi
+    fi
+
+    # Method D: Python standard library urllib (always available in container)
+    if [ "$DOWNLOADED" = false ]; then
+      echo "  Attempting direct HTTPS download via Python urllib..."
+      if python3 -c "import urllib.request; urllib.request.urlretrieve('https://sra-pub-run-odp.s3.amazonaws.com/sra/${SRA}/${SRA}', './${SRA}.sra')" 2>/dev/null; then
+        [ -s "./${SRA}.sra" ] && DOWNLOADED=true
+      fi
+    fi
+
+    if [ "$DOWNLOADED" = false ] || [ ! -s "./${SRA}.sra" ]; then
+      echo "Error: Failed to download SRA archive for ${SRA} on compute node." >&2
+      exit 1
+    fi
+    echo "Successfully downloaded ${SRA}.sra ($(du -h "./${SRA}.sra" 2>/dev/null | cut -f1)) on compute node."
+  fi
+
+  # Extract FASTQs from .sra archive
+  echo "Extracting FASTQs from ./${SRA}.sra with fasterq-dump..."
   fasterq-dump --split-3 "./${SRA}.sra" -O ./ -e "${THREADS}"
+
+  # Immediately remove .sra to free scratch disk space for alignment steps
+  rm -f "./${SRA}.sra"
 fi
 
 if [ ! -s "${SRA}_1.fastq" ] || [ ! -s "${SRA}_2.fastq" ]; then
@@ -138,20 +207,26 @@ STAR --runThreadN "${THREADS}" \
 # 4. Standardization, annotation, filtering, and deletion extraction
 log_step "4. Standardization, Annotation, and Deletion Extraction"
 echo "Standardizing alignments..."
-python3 "${REPO}/standardize_alignments.py" "${REF}" "${SRA}Aligned.out.sam" \
-  > "${SRA}_standardizationAligned.out.bam"
+{
+  python3 "${REPO}/standardize_alignments.py" "${REF}" "${SRA}Aligned.out.sam" \
+    > "${SRA}_standardizationAligned.out.bam"
+} 2>&1 | filter_verbose_stderr
 
 echo "Annotating alignments with primers..."
-python3 "${REPO}/annotate_alignment_with_primers.py" "${PRIMER}" \
-  "${SRA}_standardizationAligned.out.bam" \
-  > "${SRA}_annotated_standardization_Aligned.out.bam"
+{
+  python3 "${REPO}/annotate_alignment_with_primers.py" "${PRIMER}" \
+    "${SRA}_standardizationAligned.out.bam" \
+    > "${SRA}_annotated_standardization_Aligned.out.bam"
+} 2>&1 | filter_verbose_stderr
 
 echo "Filtering aligned reads..."
-python3 "${REPO}/filter_aligned_reads.py" "${PRIMER}" \
-  "${SRA}_annotated_standardization_Aligned.out.bam" \
-  --min-deletion-length 20 --max-overhang-primer-frac 1 --min-aligned-length 75 \
-  --primer-pool-matching --max-primer-dist 1 \
-  > "filtered_${SRA}_annotated_standardizationAligned.out.bam"
+{
+  python3 "${REPO}/filter_aligned_reads.py" "${PRIMER}" \
+    "${SRA}_annotated_standardization_Aligned.out.bam" \
+    --min-deletion-length 20 --max-overhang-primer-frac 1 --min-aligned-length 75 \
+    --primer-pool-matching --max-primer-dist 1 \
+    > "filtered_${SRA}_annotated_standardizationAligned.out.bam"
+} 2>&1 | filter_verbose_stderr
 
 echo "Extracting deletions..."
 python3 "${REPO}/extract_deletions.py" \
@@ -203,6 +278,9 @@ if [ "${CLEANUP}" = "true" ]; then
         ./${SRA}_standardizationAligned.out.bam ./${SRA}_annotated_standardization_Aligned.out.bam \
         ./filtered_${SRA}_annotated_standardizationAligned.out.bam \
         ./filtered_${SRA}_annotated_standardizationAligned.count.txt \
+        ./filtered_${name}_annotated_standardizationAligned.out.sorted.bam \
+        ./filtered_${name}_annotated_standardizationAligned.deletion.sorted.txt \
+        ./filtered_${name}_annotated_standardizationAligned.out.sorted.coverage \
         ./${name}Log.progress.out ./${name}SJ.out.tab
   NOW=$(date +%s)
   ELAPSED=$((NOW - STEP_START))
